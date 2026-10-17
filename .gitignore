@@ -19,5 +19,8 @@ venv/
 # ===== 运行时数据（SQLite 等）=====
 memory_data/
 
+# ===== 测试遗留文件 =====
+body.json
+
 # ===== 独立子项目（不纳入本仓库）=====
 min_search_engine/
