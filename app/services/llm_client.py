@@ -34,19 +34,24 @@ class LLMClient:
 
 
     # ---------- 对外接口 ----------
-    def stream(self, messages: list[dict[str, str]],**kwargs) -> Iterator[str]:
-        """流式产出文本增量（同步生成器）。"""
+    def stream(self, messages: list[dict[str, str]], min_chars: int = 8) -> Iterator[str]:
+        """流式产出文本增量。攒够 min_chars 才 yield，减少 SSE 事件数。"""
         response = self._client.chat.completions.create(
             model=self._model,
             messages=messages,
-            temperature=kwargs.get("temperature",0.7),
-            stream=True
+            stream=True,
         )
-
+        buffer = ""
         for chunk in response:
-            delta=chunk.choices[0].delta.content
-            if delta:
-                yield delta
+            content = chunk.choices[0].delta.content
+            if not content:
+                continue
+            buffer += content
+            if len(buffer) >= min_chars:
+                yield buffer
+                buffer = ""
+        if buffer:
+            yield buffer
 
     def invoke(self, messages: list[dict[str, str]], **kwargs) -> str:
         """一次性拿到完整回答（摘要用）。"""
